@@ -76,3 +76,82 @@ export async function gantiPassword(prevState, formData) {
 
   return { success: true, message: "Password berhasil diganti." };
 }
+
+export async function tambahProduk(formData) {
+  const { supabase } = await pastikanAdminSudahLogin();
+
+  const nama = formData.get("nama")?.toString().trim();
+  const harga = parseInt(formData.get("harga"), 10);
+  const kategori = formData.get("kategori")?.toString().trim() || null;
+  const foto_url = formData.get("foto_url")?.toString().trim() || null;
+  const deskripsi = formData.get("deskripsi")?.toString().trim() || null;
+
+  if (!nama || isNaN(harga) || harga < 0) {
+    throw new Error("Nama dan harga produk (minimal 0) wajib diisi.");
+  }
+
+  const { error } = await supabase.from("produk").insert([
+    {
+      nama,
+      harga,
+      kategori,
+      foto_url,
+      deskripsi,
+    },
+  ]);
+
+  if (error) {
+    throw new Error(error.message || "Gagal menambah produk.");
+  }
+
+  redirect("/admin");
+}
+
+export async function ubahProduk(formData) {
+  const { supabase } = await pastikanAdminSudahLogin();
+
+  const id = formData.get("id");
+  const nama = formData.get("nama")?.toString().trim();
+  const harga = parseInt(formData.get("harga"), 10);
+  const kategori = formData.get("kategori")?.toString().trim() || null;
+  const foto_url = formData.get("foto_url")?.toString().trim() || null;
+  const deskripsi = formData.get("deskripsi")?.toString().trim() || null;
+
+  if (!id || !nama || isNaN(harga) || harga < 0) {
+    throw new Error("ID, nama, dan harga produk (minimal 0) wajib diisi.");
+  }
+
+  const { error } = await supabase
+    .from("produk")
+    .update({
+      nama,
+      harga,
+      kategori,
+      foto_url,
+      deskripsi,
+    })
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(error.message || "Gagal mengubah produk.");
+  }
+
+  redirect("/admin");
+}
+
+export async function hapusProduk(formData) {
+  const { supabase } = await pastikanAdminSudahLogin();
+
+  const id = formData.get("id");
+  if (!id) {
+    throw new Error("ID produk tidak valid.");
+  }
+
+  const { error } = await supabase.from("produk").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(error.message || "Gagal menghapus produk.");
+  }
+
+  redirect("/admin");
+}
