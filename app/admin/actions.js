@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { buatKlienSesiAdmin } from "@/lib/supabase/auth";
+import { buatKlienSesiAdmin, pastikanAdminSudahLogin } from "@/lib/supabase/auth";
 
 export async function login(prevState, formData) {
   const data = formData instanceof FormData ? formData : (prevState instanceof FormData ? prevState : null);
@@ -58,14 +58,12 @@ export async function gantiPassword(prevState, formData) {
     return { error: "Password baru dan konfirmasi password tidak sama." };
   }
 
-  const supabase = await buatKlienSesiAdmin();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return { error: "Sesi telah berakhir atau kamu belum login. Silakan login kembali." };
+  let supabase;
+  try {
+    const authResult = await pastikanAdminSudahLogin();
+    supabase = authResult.supabase;
+  } catch (err) {
+    return { error: err.message || "Sesi telah berakhir atau kamu belum login. Silakan login kembali." };
   }
 
   const { error } = await supabase.auth.updateUser({
